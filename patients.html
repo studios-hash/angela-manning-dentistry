@@ -1,0 +1,1316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Patients — Angela Manning Dentistry</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Work+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
+  />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<template id="__bundler_thumbnail"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><rect width="200" height="200" fill="#0D47A1"/><text x="100" y="115" font-size="80" text-anchor="middle" fill="#fff" font-family="serif">A</text></svg></template>
+<body>
+  <div id="root"></div>
+
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js"
+          integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L"
+          crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js"
+          integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm"
+          crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js"
+          integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y"
+          crossorigin="anonymous"></script>
+
+  <script type="text/babel">
+// shared.jsx — Reusable building blocks for all 3 homepage directions.
+// Exposes components on window so other Babel scripts can use them.
+
+const { useState, useEffect, useRef, useCallback } = React;
+
+// ──────────────────────────────────────────────────────────────────────
+// Placeholder with Higgsfield prompt caption
+// Use: <Ph w h prompt="..." aerial portrait video />
+// ──────────────────────────────────────────────────────────────────────
+function Ph({ w, h, prompt, src, alt, objectPosition, aerial, portrait, video, style, label, className = "", children }) {
+  const classes = ["ph", className];
+  if (aerial) classes.push("ph--aerial");
+  if (portrait) classes.push("ph--portrait");
+  return (
+    <div
+      className={classes.join(" ")}
+      style={{ width: w || "100%", height: h || 240, ...style }}
+    >
+      {src && (
+        <img
+          src={src}
+          alt={alt || ""}
+          style={{
+            position: "absolute", inset: 0, zIndex: 1,
+            width: "100%", height: "100%",
+            objectFit: "cover",
+            objectPosition: objectPosition || "center",
+            display: "block",
+          }}
+        />
+      )}
+      {video && <PlayBadge />}
+      {!src && prompt && <div className="ph__label">{prompt}</div>}
+      {!src && label && !prompt && (
+        <div className="ph__label" style={{ background: "rgba(255,255,255,0.7)" }}>
+          {label}
+        </div>
+      )}
+      {children}
+    </div>
+  );
+}
+
+// ──────────────────────────────────────────────────────────────────────
+// VideoBG — autoplay/muted/loop drone footage of the practice.
+// Used as the primary hero background across all three directions.
+// ──────────────────────────────────────────────────────────────────────
+const HERO_VIDEO_SRC = "uploads/manning_webBG_V4.mp4";
+
+function VideoBG({ height = 520, overlay, objectPosition = "center", style, children }) {
+  const videoRef = useRef(null);
+  useEffect(() => {
+    const el = videoRef.current;
+    if (!el) return;
+    if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    let raf = null;
+    const onScroll = () => {
+      if (raf) return;
+      raf = requestAnimationFrame(() => {
+        const y = Math.min(Math.max(window.scrollY * 0.08, -30), 60);
+        el.style.transform = `translateY(${y}px) scale(1.08)`;
+        raf = null;
+      });
+    };
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => { window.removeEventListener("scroll", onScroll); if (raf) cancelAnimationFrame(raf); };
+  }, []);
+  return (
+    <div style={{
+      position: "relative", width: "100%", height,
+      overflow: "hidden", background: "var(--ink)",
+      ...style,
+    }}>
+      <video
+        ref={videoRef}
+        autoPlay muted loop playsInline
+        aria-hidden="true"
+        style={{
+          position: "absolute", inset: 0, zIndex: 0,
+          width: "100%", height: "100%",
+          objectFit: "cover", objectPosition,
+          display: "block",
+        }}
+      >
+        <source src={HERO_VIDEO_SRC} type="video/mp4" />
+      </video>
+      {overlay && (
+        <div style={{ position: "absolute", inset: 0, zIndex: 1, background: overlay, pointerEvents: "none" }} />
+      )}
+      {children}
+    </div>
+  );
+}
+
+function PlayBadge() {
+  return (
+    <div style={{
+      position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center",
+      zIndex: 2, pointerEvents: "none",
+    }}>
+      <div style={{
+        width: 64, height: 64, borderRadius: 999,
+        background: "rgba(254,254,254,0.85)",
+        backdropFilter: "blur(8px)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        boxShadow: "0 8px 30px rgba(13,71,161,0.25)",
+      }}>
+        <svg width="20" height="22" viewBox="0 0 20 22" fill="none">
+          <path d="M2 2L18 11L2 20V2Z" fill="#0D47A1" />
+        </svg>
+      </div>
+    </div>
+  );
+}
+
+// ──────────────────────────────────────────────────────────────────────
+// Logo — uses brand wordmark style (Noto Serif italic "Angela Mning"-esque)
+// Brandbook shows the wordmark as "Angela Mning" with a stylized M
+// ──────────────────────────────────────────────────────────────────────
+function Logo({ onDark = false, size = 40 }) {
+  // `size` = rendered height in px; the banner carries the custom wordmark.
+  const src = onDark ? "images/logo_banner_white.png" : "images/logo_banner.png";
+  return (
+    <img
+      src={src}
+      alt="Angela Manning Dentistry"
+      style={{ height: size, width: "auto", display: "block" }}
+    />
+  );
+}
+
+function LogoMark({ size = 22, fill = "var(--brand-royal)" }) {
+  // Simple elegant "AM" monogram in a circle — placeholder for the real custom mark
+  const s = size + 6;
+  return (
+    <svg width={s} height={s} viewBox="0 0 32 32" fill="none" aria-hidden="true">
+      <circle cx="16" cy="16" r="15" stroke={fill} strokeWidth="1" fill="none" />
+      <path
+        d="M9 22 L13.5 9.5 L18 22 M10.6 18 L16.4 18"
+        stroke={fill} strokeWidth="1.2" fill="none" strokeLinecap="round" strokeLinejoin="round"
+      />
+      <path
+        d="M19 22 L19 9.5 L22.5 16 L26 9.5 L26 22"
+        stroke={fill} strokeWidth="1.2" fill="none" strokeLinecap="round" strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+// ──────────────────────────────────────────────────────────────────────
+// Header — sticky, with location indicator and Book CTA
+// ──────────────────────────────────────────────────────────────────────
+const NAV_ITEMS = [
+  { label: "About", href: "about.html", key: "about" },
+  { label: "Services", href: "services.html", key: "services" },
+  { label: "Patients", href: "patients.html", key: "patients" },
+  { label: "Smile Gallery", href: "gallery.html", key: "gallery" },
+  { label: "Contact", href: "contact.html", key: "contact" },
+];
+
+const OFFICES = {
+  Rye: { name: "Rye office", phone: "(914) 967-1123", address: "66 Milton Rd, Suite A13, Rye, NY 10580" },
+  "Rye Brook": { name: "Rye Brook office", phone: "(914) 305-6555", address: "555 Westchester Ave, Rye Brook, NY 10573" },
+};
+
+function PageLoader() {
+  const [phase, setPhase] = useState("in"); // in -> out -> gone
+  useEffect(() => {
+    let seen;
+    try { seen = sessionStorage.getItem("amd_loader_seen"); } catch (e) { seen = null; }
+    if (seen) { setPhase("gone"); return; }
+    try { sessionStorage.setItem("amd_loader_seen", "1"); } catch (e) {}
+    const t1 = setTimeout(() => setPhase("out"), 650);
+    const t2 = setTimeout(() => setPhase("gone"), 1050);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
+  }, []);
+  if (phase === "gone") return null;
+  return (
+    <div style={{
+      position: "fixed", inset: 0, zIndex: 9999,
+      background: "var(--ink)",
+      display: "flex", alignItems: "center", justifyContent: "center",
+      opacity: phase === "out" ? 0 : 1,
+      transition: "opacity .4s ease",
+      pointerEvents: phase === "out" ? "none" : "auto",
+    }}>
+      <div style={{ animation: "amdLoaderPulse 1.1s ease-in-out infinite" }}>
+        <LogoMark size={34} fill="var(--brand-white)" />
+      </div>
+    </div>
+  );
+}
+
+function Header({ variant = "safe", scrolled = false, dark = false, active = "" }) {
+  const [openMenu, setOpenMenu] = useState(null);
+  const [loc, setLoc] = useState("Rye");
+  const bg = dark
+    ? "rgba(14,27,44,0.72)"
+    : scrolled
+      ? "rgba(254,254,254,0.92)"
+      : "rgba(254,254,254,0.0)";
+  const textColor = dark ? "var(--brand-white)" : "var(--ink)";
+  const borderColor = dark ? "rgba(255,255,255,0.08)" : "var(--line-soft)";
+
+  return (
+    <React.Fragment>
+    <PageLoader />
+    <header
+      className="sticky-top"
+      style={{
+        background: bg,
+        backdropFilter: "blur(14px)",
+        WebkitBackdropFilter: "blur(14px)",
+        borderBottom: `1px solid ${borderColor}`,
+        transition: "background .25s ease, border-color .25s ease",
+        color: textColor,
+      }}
+    >
+      {/* Top utility row — location switcher + language + phone */}
+      <div style={{
+        background: dark ? "transparent" : "rgba(13,71,161,0.04)",
+        borderBottom: `1px solid ${borderColor}`,
+        fontSize: 12,
+        color: dark ? "rgba(255,255,255,0.7)" : "var(--ink-mute)",
+      }}>
+        <div style={{
+          maxWidth: 1280, margin: "0 auto", padding: "8px 32px",
+          display: "flex", justifyContent: "space-between", alignItems: "center", gap: 24,
+        }}>
+          <div style={{ display: "flex", gap: 20, alignItems: "center" }}>
+            <LocationPill dark={dark} loc={loc} setLoc={setLoc} />
+            <span style={{ opacity: 0.4 }}>·</span>
+            <a href={`tel:${OFFICES[loc].phone.replace(/[^\d+]/g, "")}`} style={{ display: "inline-flex", alignItems: "center", gap: 6, color: "inherit" }}>
+              <Icon name="phone" size={11} /> {OFFICES[loc].phone}
+            </a>
+          </div>
+          <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
+            <LangSwitcher dark={dark} />
+            <span style={{ opacity: 0.4 }}>·</span>
+            <span>Mon–Thu 8–5 · Fri 8–12</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Main nav */}
+      <div style={{
+        maxWidth: 1280, margin: "0 auto", padding: "18px 32px",
+        display: "flex", alignItems: "center", justifyContent: "space-between", gap: 24,
+      }}>
+        <a href="index.html" style={{ display: "flex", alignItems: "center" }}>
+          <Logo size={variant === "bold" ? 46 : 44} onDark={dark} />
+        </a>
+
+        <nav style={{ display: "flex", gap: 28, fontSize: 14 }}>
+          {NAV_ITEMS.map(item => (
+            <a
+              key={item.key}
+              href={item.href}
+              style={{
+                color: textColor,
+                opacity: active === item.key ? 1 : 0.85,
+                fontWeight: active === item.key ? 600 : 400,
+                transition: "opacity .15s",
+                position: "relative",
+                paddingBottom: 2,
+                borderBottom: active === item.key ? `1.5px solid ${textColor}` : "1.5px solid transparent",
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.opacity = 1; }}
+              onMouseLeave={(e) => { e.currentTarget.style.opacity = active === item.key ? 1 : 0.85; }}
+            >
+              {item.label}
+            </a>
+          ))}
+        </nav>
+
+        <a href="contact.html" className="btn btn-primary" style={{ fontSize: 13, padding: "12px 20px" }}>
+          Book a visit
+          <Icon name="arrow-right" size={12} />
+        </a>
+      </div>
+    </header>
+    </React.Fragment>
+  );
+}
+
+function LocationPill({ dark, loc, setLoc }) {
+  return (
+    <span style={{
+      display: "inline-flex", alignItems: "center", gap: 6,
+      cursor: "pointer", userSelect: "none",
+    }}
+      onClick={() => setLoc(loc === "Rye" ? "Rye Brook" : "Rye")}
+      title="Switch location"
+    >
+      <span style={{
+        width: 6, height: 6, borderRadius: 999,
+        background: "var(--brand-sky)",
+        boxShadow: "0 0 0 3px rgba(117,165,225,0.25)",
+      }} />
+      <Icon name="pin" size={11} />
+      <span style={{ fontWeight: 500 }}>{loc} office</span>
+      <Icon name="chevron-down" size={9} />
+    </span>
+  );
+}
+
+function LangSwitcher({ dark }) {
+  const [lang, setLang] = useState("EN");
+  const langs = ["EN", "ES", "PT"];
+  return (
+    <span style={{ display: "inline-flex", gap: 2, alignItems: "center" }}>
+      {langs.map(l => (
+        <button
+          key={l}
+          onClick={() => setLang(l)}
+          style={{
+            padding: "3px 7px",
+            fontSize: 11,
+            fontWeight: lang === l ? 600 : 400,
+            color: lang === l ? "var(--brand-royal)" : "inherit",
+            background: lang === l ? "rgba(13,71,161,0.08)" : "transparent",
+            borderRadius: 4,
+            letterSpacing: "0.05em",
+          }}
+        >{l}</button>
+      ))}
+    </span>
+  );
+}
+
+// ──────────────────────────────────────────────────────────────────────
+// Icons (inline SVG — small set)
+// ──────────────────────────────────────────────────────────────────────
+function Icon({ name, size = 16, color = "currentColor", strokeWidth = 1.5 }) {
+  const props = {
+    width: size, height: size, viewBox: "0 0 24 24",
+    fill: "none", stroke: color, strokeWidth, strokeLinecap: "round", strokeLinejoin: "round",
+    style: { flexShrink: 0 },
+  };
+  switch (name) {
+    case "arrow-right": return <svg {...props}><path d="M5 12h14M13 6l6 6-6 6"/></svg>;
+    case "arrow-up-right": return <svg {...props}><path d="M7 17L17 7M8 7h9v9"/></svg>;
+    case "phone": return <svg {...props}><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.13.96.36 1.9.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0122 16.92z"/></svg>;
+    case "pin": return <svg {...props}><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>;
+    case "chevron-down": return <svg {...props}><path d="M6 9l6 6 6-6"/></svg>;
+    case "chevron-right": return <svg {...props}><path d="M9 18l6-6-6-6"/></svg>;
+    case "calendar": return <svg {...props}><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>;
+    case "sparkle": return <svg {...props}><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/></svg>;
+    case "shield": return <svg {...props}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>;
+    case "tooth": return <svg {...props}><path d="M12 2c-3 0-5 2-7 2s-2 2-2 4c0 4 1 6 2 9 .5 1.5 1 3 1 5 0 0 1-1 2-3s1-4 2-5h1c1 1 1 3 2 5s2 3 2 3c0-2 .5-3.5 1-5 1-3 2-5 2-9 0-2 0-4-2-4s-4-2-7-2z"/></svg>;
+    case "heart": return <svg {...props}><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>;
+    case "smile": return <svg {...props}><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2M9 9h.01M15 9h.01"/></svg>;
+    case "star": return <svg {...props}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>;
+    case "play": return <svg {...props}><polygon points="6 4 20 12 6 20 6 4"/></svg>;
+    case "check": return <svg {...props}><polyline points="20 6 9 17 4 12"/></svg>;
+    case "music": return <svg {...props}><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>;
+    case "leaf": return <svg {...props}><path d="M11 20A7 7 0 014 13V5h7a7 7 0 010 14z"/><path d="M5 13c5-1 9-5 9-9"/></svg>;
+    case "clock": return <svg {...props}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>;
+    case "menu": return <svg {...props}><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>;
+    case "x": return <svg {...props}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>;
+    case "mail": return <svg {...props}><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>;
+    case "drag": return <svg {...props} fill="currentColor" stroke="none"><circle cx="9" cy="6" r="1.4"/><circle cx="15" cy="6" r="1.4"/><circle cx="9" cy="12" r="1.4"/><circle cx="15" cy="12" r="1.4"/><circle cx="9" cy="18" r="1.4"/><circle cx="15" cy="18" r="1.4"/></svg>;
+    default: return null;
+  }
+}
+
+// ──────────────────────────────────────────────────────────────────────
+// BeforeAfter slider — drag handle to reveal "after"
+// ──────────────────────────────────────────────────────────────────────
+function BeforeAfter({ beforeLabel, afterLabel, beforePrompt, afterPrompt, beforeSrc, afterSrc, height = 420, accent = "var(--brand-royal)" }) {
+  const ref = useRef(null);
+  const [pos, setPos] = useState(50);
+  const dragging = useRef(false);
+
+  const updateFromX = (clientX) => {
+    if (!ref.current) return;
+    const rect = ref.current.getBoundingClientRect();
+    const x = clientX - rect.left;
+    const pct = Math.max(0, Math.min(100, (x / rect.width) * 100));
+    setPos(pct);
+  };
+
+  useEffect(() => {
+    const onMove = (e) => {
+      if (!dragging.current) return;
+      const x = e.touches ? e.touches[0].clientX : e.clientX;
+      updateFromX(x);
+    };
+    const onUp = () => { dragging.current = false; };
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("touchmove", onMove);
+    window.addEventListener("mouseup", onUp);
+    window.addEventListener("touchend", onUp);
+    return () => {
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("touchmove", onMove);
+      window.removeEventListener("mouseup", onUp);
+      window.removeEventListener("touchend", onUp);
+    };
+  }, []);
+
+  return (
+    <div
+      ref={ref}
+      className="framed"
+      style={{
+        position: "relative",
+        width: "100%",
+        height,
+        overflow: "hidden",
+        userSelect: "none",
+        cursor: "ew-resize",
+        background: "var(--brand-warm)",
+      }}
+      onMouseDown={(e) => { dragging.current = true; updateFromX(e.clientX); }}
+      onTouchStart={(e) => { dragging.current = true; updateFromX(e.touches[0].clientX); }}
+    >
+      {/* AFTER (full underneath) */}
+      <div style={{ position: "absolute", inset: 0 }}>
+        <Ph aerial={false} portrait w="100%" h="100%" src={afterSrc} prompt={afterPrompt} style={{ borderRadius: 0 }} />
+        <Tag style={{ right: 16, bottom: 16, background: accent, color: "white" }}>
+          {afterLabel || "After"}
+        </Tag>
+      </div>
+      {/* BEFORE (clipped via clip-path so it stays pixel-aligned with AFTER) */}
+      <div style={{
+        position: "absolute", inset: 0,
+        clipPath: `inset(0 ${100 - pos}% 0 0)`,
+        WebkitClipPath: `inset(0 ${100 - pos}% 0 0)`,
+      }}>
+        <Ph portrait w="100%" h="100%" src={beforeSrc} prompt={beforePrompt} style={{ borderRadius: 0, filter: "saturate(0.85)" }} />
+        <Tag style={{ left: 16, bottom: 16, background: "rgba(14,27,44,0.78)", color: "white" }}>
+          {beforeLabel || "Before"}
+        </Tag>
+      </div>
+      {/* Handle */}
+      <div
+        style={{
+          position: "absolute", top: 0, bottom: 0, left: `${pos}%`,
+          width: 2, background: "var(--brand-white)",
+          transform: "translateX(-50%)",
+          boxShadow: "0 0 0 1px rgba(13,71,161,0.18), 0 0 24px rgba(13,71,161,0.25)",
+          pointerEvents: "none",
+        }}
+      >
+        <div style={{
+          position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)",
+          width: 44, height: 44, borderRadius: 999,
+          background: "var(--brand-white)",
+          boxShadow: "0 4px 16px rgba(13,71,161,0.3)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          color: "var(--brand-royal)",
+          pointerEvents: "auto",
+          cursor: "ew-resize",
+        }}>
+          <svg width="18" height="14" viewBox="0 0 18 14" fill="none">
+            <path d="M5 1L1 7L5 13M13 1L17 7L13 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Tag({ children, style = {} }) {
+  return (
+    <span style={{
+      position: "absolute",
+      padding: "6px 12px",
+      fontFamily: "var(--mono)",
+      fontSize: 10,
+      fontWeight: 500,
+      letterSpacing: "0.12em",
+      textTransform: "uppercase",
+      borderRadius: 999,
+      backdropFilter: "blur(6px)",
+      ...style,
+    }}>{children}</span>
+  );
+}
+
+// ──────────────────────────────────────────────────────────────────────
+// Footer — same across directions, minor styling can vary
+// ──────────────────────────────────────────────────────────────────────
+function Footer({ variant = "safe" }) {
+  const dark = variant !== "editorial";
+  return (
+    <footer style={{
+      background: dark ? "var(--ink)" : "var(--cream)",
+      color: dark ? "rgba(255,255,255,0.85)" : "var(--ink)",
+      padding: "80px 32px 32px",
+    }}>
+      <div style={{ maxWidth: 1280, margin: "0 auto" }}>
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: "1.3fr 1fr 1fr 1fr 1fr",
+          gap: 40,
+          paddingBottom: 60,
+          borderBottom: `1px solid ${dark ? "rgba(255,255,255,0.1)" : "var(--line)"}`,
+        }}>
+          <div>
+            <a href="index.html" style={{ display: "inline-block" }}><Logo onDark={dark} size={60} /></a>
+            <p className="serif" style={{
+              fontSize: 22,
+              lineHeight: 1.35,
+              marginTop: 24,
+              marginBottom: 28,
+              maxWidth: 320,
+              color: dark ? "rgba(255,255,255,0.9)" : "var(--ink)",
+            }}>
+              Gentle care, beautifully delivered.
+            </p>
+            <a href="contact.html" className="btn btn-primary" style={{
+              background: dark ? "var(--brand-sky)" : "var(--brand-royal)",
+            }}>
+              Book a visit <Icon name="arrow-right" size={12} />
+            </a>
+            <div style={{ display: "flex", gap: 12, marginTop: 28 }}>
+              {["instagram", "facebook", "google"].map(s => (
+                <a key={s} href="#" aria-label={s} style={{
+                  width: 34, height: 34, borderRadius: 999,
+                  border: `1px solid ${dark ? "rgba(255,255,255,0.2)" : "var(--line)"}`,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: 11, textTransform: "uppercase", color: "inherit", opacity: 0.85,
+                }}>{s[0]}</a>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <div className="eyebrow" style={{ color: dark ? "rgba(255,255,255,0.55)" : "var(--ink-mute)" }}>Rye Office</div>
+            <p style={{ fontSize: 14, lineHeight: 1.7, marginTop: 12, opacity: 0.85 }}>
+              66 Milton Rd, Suite A13<br/>
+              Rye, NY 10580<br/>
+              <a href="tel:9149671123">(914) 967-1123</a>
+            </p>
+            <a href="https://maps.google.com/?q=66+Milton+Rd+Suite+A13+Rye+NY+10580" target="_blank" rel="noreferrer" style={{ fontSize: 12, marginTop: 14, opacity: 0.75, display: "inline-flex", alignItems: "center", gap: 5 }}>
+              Get directions <Icon name="arrow-up-right" size={11} />
+            </a>
+          </div>
+
+          <div>
+            <div className="eyebrow" style={{ color: dark ? "rgba(255,255,255,0.55)" : "var(--ink-mute)" }}>Rye Brook Office</div>
+            <p style={{ fontSize: 14, lineHeight: 1.7, marginTop: 12, opacity: 0.85 }}>
+              555 Westchester Ave<br/>
+              Rye Brook, NY 10573<br/>
+              <a href="tel:9143056555">(914) 305-6555</a>
+            </p>
+            <a href="https://maps.google.com/?q=555+Westchester+Ave+Rye+Brook+NY+10573" target="_blank" rel="noreferrer" style={{ fontSize: 12, marginTop: 14, opacity: 0.75, display: "inline-flex", alignItems: "center", gap: 5 }}>
+              Get directions <Icon name="arrow-up-right" size={11} />
+            </a>
+            <p style={{ fontSize: 12, marginTop: 10, opacity: 0.6 }}>info@angelamanningdentistry.com</p>
+          </div>
+
+          <div>
+            <div className="eyebrow" style={{ color: dark ? "rgba(255,255,255,0.55)" : "var(--ink-mute)" }}>Hours</div>
+            <table style={{ fontSize: 13, marginTop: 12, opacity: 0.85, lineHeight: 1.9 }}>
+              <tbody>
+                <tr><td style={{ paddingRight: 24 }}>Mon – Thu</td><td>8 am – 5 pm</td></tr>
+                <tr><td>Friday</td><td>8 am – 12 pm</td></tr>
+                <tr><td>Saturday</td><td>One per month</td></tr>
+                <tr><td>Sunday</td><td>Closed</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div>
+            <div className="eyebrow" style={{ color: dark ? "rgba(255,255,255,0.55)" : "var(--ink-mute)" }}>Quick links</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 12, fontSize: 13.5, opacity: 0.9 }}>
+              <a href="about.html">About</a>
+              <a href="services.html">Services</a>
+              <a href="patients.html">Patients</a>
+              <a href="gallery.html">Smile Gallery</a>
+              <a href="contact.html">Contact</a>
+            </div>
+          </div>
+        </div>
+
+        <div style={{
+          paddingTop: 28,
+          display: "flex", justifyContent: "space-between", alignItems: "center",
+          fontSize: 12, opacity: 0.6, flexWrap: "wrap", gap: 16,
+        }}>
+          <span>© 2026 Angela Manning DDS PC · Established 2009 · Westchester County, NY</span>
+          <span style={{ display: "flex", gap: 24 }}>
+            <a href="accessibility.html">Accessibility</a>
+            <a href="privacy.html">Privacy</a>
+            <a href="terms.html">Terms</a>
+          </span>
+        </div>
+      </div>
+    </footer>
+  );
+}
+
+// ──────────────────────────────────────────────────────────────────────
+// AI Concierge — small chat dot powered by window.claude.complete
+// ──────────────────────────────────────────────────────────────────────
+function Concierge({ accentColor = "var(--brand-royal)" }) {
+  const [open, setOpen] = useState(false);
+  const [msgs, setMsgs] = useState([
+    { role: "assistant", text: "Hi — I'm Manning's after-hours concierge. Ask about services, insurance, or what to expect at your first visit." },
+  ]);
+  const [input, setInput] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  const send = async () => {
+    const text = input.trim();
+    if (!text || busy) return;
+    setMsgs(m => [...m, { role: "user", text }]);
+    setInput("");
+    setBusy(true);
+    try {
+      const reply = await window.claude.complete({
+        messages: [
+          { role: "user", content:
+            "You are a friendly concierge for Angela Manning Dentistry (Rye + Rye Brook, NY). " +
+            "Dr. Angela Manning and Dr. Camilla Acevedo. Out-of-network but accept PPO. " +
+            "Discount plan for uninsured. Services include preventive, cosmetic (whitening, veneers), " +
+            "implants, Invisalign, endodontics, periodontics, pediatric, TMJ/Botox. " +
+            "Tone: warm, neighborly, calm, not scary. Keep replies to 2-3 sentences. " +
+            "If user asks to book, suggest tapping the 'Book a visit' button or calling (914) 967-1123 (Rye) or (914) 305-6555 (Rye Brook). " +
+            "User question: " + text },
+        ],
+      });
+      setMsgs(m => [...m, { role: "assistant", text: reply }]);
+    } catch (e) {
+      setMsgs(m => [...m, { role: "assistant", text: "Hmm, I'm having trouble right now. Please call us at (914) 967-1123 or tap Book a visit." }]);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div style={{ position: "absolute", bottom: 24, right: 24, zIndex: 60 }}>
+      {open && (
+        <div style={{
+          position: "absolute", bottom: 70, right: 0,
+          width: 320,
+          background: "var(--brand-white)",
+          borderRadius: 18,
+          boxShadow: "0 20px 60px rgba(13,71,161,0.25)",
+          border: "1px solid var(--line)",
+          overflow: "hidden",
+          display: "flex", flexDirection: "column",
+          maxHeight: 420,
+        }}>
+          <div style={{
+            padding: "14px 16px",
+            background: accentColor,
+            color: "white",
+            display: "flex", justifyContent: "space-between", alignItems: "center",
+          }}>
+            <div>
+              <div style={{ fontFamily: "var(--serif)", fontSize: 16 }}>Ask the concierge</div>
+              <div style={{ fontSize: 11, opacity: 0.85 }}>Replies in seconds · powered by AI</div>
+            </div>
+            <button onClick={() => setOpen(false)} style={{ color: "white", padding: 4 }}>
+              <Icon name="x" size={16} />
+            </button>
+          </div>
+          <div style={{ flex: 1, overflowY: "auto", padding: 14, display: "flex", flexDirection: "column", gap: 10 }}>
+            {msgs.map((m, i) => (
+              <div key={i} style={{
+                alignSelf: m.role === "user" ? "flex-end" : "flex-start",
+                background: m.role === "user" ? accentColor : "var(--brand-mist)",
+                color: m.role === "user" ? "white" : "var(--ink)",
+                padding: "9px 13px",
+                borderRadius: 14,
+                fontSize: 13,
+                lineHeight: 1.45,
+                maxWidth: "85%",
+              }}>{m.text}</div>
+            ))}
+            {busy && <div style={{ fontSize: 11, color: "var(--ink-mute)", fontStyle: "italic" }}>thinking…</div>}
+          </div>
+          <div style={{ padding: 10, borderTop: "1px solid var(--line)", display: "flex", gap: 6 }}>
+            <input
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && send()}
+              placeholder="Type a question…"
+              style={{
+                flex: 1, border: "1px solid var(--line)", borderRadius: 999,
+                padding: "8px 14px", fontSize: 13, background: "var(--offwhite)",
+              }}
+            />
+            <button onClick={send} disabled={busy} style={{
+              background: accentColor, color: "white",
+              borderRadius: 999, padding: "8px 14px", fontSize: 13,
+            }}>Send</button>
+          </div>
+        </div>
+      )}
+      <button
+        onClick={() => setOpen(o => !o)}
+        style={{
+          width: 56, height: 56, borderRadius: 999,
+          background: accentColor, color: "white",
+          boxShadow: "0 10px 30px rgba(13,71,161,0.3)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+        }}
+      >
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/>
+        </svg>
+      </button>
+    </div>
+  );
+}
+
+// ──────────────────────────────────────────────────────────────────────
+// Service bucket card
+// ──────────────────────────────────────────────────────────────────────
+function ServiceCard({ icon, title, items, accent, variant = "safe" }) {
+  return (
+    <div style={{
+      background: variant === "bold" ? "var(--ink)" : "var(--brand-white)",
+      color: variant === "bold" ? "var(--brand-white)" : "var(--ink)",
+      borderRadius: variant === "editorial" ? 0 : 18,
+      border: variant === "bold" ? "none" : "1px solid var(--line)",
+      padding: 28,
+      transition: "transform .2s ease, box-shadow .2s ease",
+      cursor: "pointer",
+      height: "100%",
+    }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.transform = "translateY(-4px)";
+        e.currentTarget.style.boxShadow = "0 20px 50px rgba(13,71,161,0.12)";
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.transform = "translateY(0)";
+        e.currentTarget.style.boxShadow = "none";
+      }}
+    >
+      <div style={{
+        width: 44, height: 44, borderRadius: 12,
+        background: accent || "var(--brand-mist)",
+        color: variant === "bold" ? "var(--brand-royal)" : "var(--brand-royal)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        marginBottom: 20,
+      }}>
+        <Icon name={icon} size={20} />
+      </div>
+      <h3 className="serif" style={{ fontSize: 22, margin: 0, marginBottom: 12, lineHeight: 1.2 }}>{title}</h3>
+      <ul style={{
+        listStyle: "none", padding: 0, margin: 0,
+        fontSize: 13.5, lineHeight: 1.9,
+        opacity: 0.85,
+      }}>
+        {items.map(s => <li key={s}>{s}</li>)}
+      </ul>
+      <div style={{ marginTop: 20, fontSize: 13, color: variant === "bold" ? "var(--brand-sky)" : "var(--brand-royal)", display: "inline-flex", alignItems: "center", gap: 6 }}>
+        Explore <Icon name="arrow-right" size={12} />
+      </div>
+    </div>
+  );
+}
+
+const SERVICE_BUCKETS = [
+  {
+    icon: "shield", title: "Preventive",
+    items: ["Cleanings & checkups", "Digital x-rays", "iTero scans", "Sealants & fluoride"],
+  },
+  {
+    icon: "sparkle", title: "Cosmetic",
+    items: ["Zoom whitening", "Veneers", "Invisalign", "Smile makeovers"],
+  },
+  {
+    icon: "tooth", title: "Restorative",
+    items: ["Implants & all-on-4", "Crowns & bridges", "Root canals", "Dentures"],
+  },
+  {
+    icon: "heart", title: "Specialty",
+    items: ["Pediatric dentistry", "TMJ / Botox therapy", "Periodontal care", "Oral surgery"],
+  },
+];
+
+// ──────────────────────────────────────────────────────────────────────
+// Testimonial card
+// ──────────────────────────────────────────────────────────────────────
+function Testimonial({ quote, name, role, variant = "safe" }) {
+  return (
+    <div style={{
+      background: variant === "editorial" ? "transparent" : "var(--offwhite)",
+      borderRadius: variant === "editorial" ? 0 : 16,
+      border: variant === "editorial" ? "none" : "1px solid var(--line)",
+      borderTop: variant === "editorial" ? "1px solid var(--ink)" : undefined,
+      padding: variant === "editorial" ? "28px 0 0" : 28,
+    }}>
+      <div style={{ display: "flex", gap: 3, marginBottom: 16, color: "var(--brand-royal)" }}>
+        {[1,2,3,4,5].map(i => <Icon key={i} name="star" size={14} color="var(--brand-royal)" strokeWidth={0} />)}
+      </div>
+      <p className="serif" style={{ fontSize: 19, lineHeight: 1.45, margin: 0, marginBottom: 20, textWrap: "pretty" }}>
+        “{quote}”
+      </p>
+      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <div style={{
+          width: 36, height: 36, borderRadius: 999,
+          background: "var(--brand-mist)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          color: "var(--brand-royal)",
+          fontFamily: "var(--serif)",
+          fontSize: 14,
+        }}>{name.split(" ").map(w => w[0]).join("").slice(0,2)}</div>
+        <div>
+          <div style={{ fontSize: 13, fontWeight: 600 }}>{name}</div>
+          <div style={{ fontSize: 11, color: "var(--ink-mute)" }}>{role}</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const TESTIMONIALS = [
+  { name: "Erin H.", role: "Rye · Patient since 2018", quote: "Finally, a team that listened and treated me like family. Dr. Manning explained every step before lifting a finger." },
+  { name: "Marco D.", role: "Greenwich · New patient", quote: "I used to white-knuckle every dental visit. The leather couches, the music, the way they showed me the iTero scan — I almost forgot where I was." },
+  { name: "Priya S.", role: "Mamaroneck · Invisalign", quote: "They mapped out my entire plan on day one. Nine months later my smile is exactly what they previewed." },
+];
+
+// ──────────────────────────────────────────────────────────────────────
+// First-visit walkthrough
+// ──────────────────────────────────────────────────────────────────────
+const FIRST_VISIT = [
+  { step: "01", title: "Warm welcome", detail: "Greeted by a live person at the front desk — no kiosk, no clipboard scramble. Coffee, the fireplace, a quiet leather couch." },
+  { step: "02", title: "Meet your hygienist", detail: "Introduced by name. We talk through any concerns before any instruments come out — your time slot is a full hour, never rushed." },
+  { step: "03", title: "iTero scan", detail: "Quick photo-like scan that builds a 3D model of your mouth. No goop, no bite trays. We review it on screen together." },
+  { step: "04", title: "Gentle cleaning", detail: "Music in the room. Optional Waterlase laser for sensitive gums. Digital x-rays only if you're due — radiation kept minimal." },
+  { step: "05", title: "Plain-English plan", detail: "We walk through findings, options, and costs on a tablet. Out-of-network but in-network with most PPOs — we handle the paperwork." },
+];
+
+// ──────────────────────────────────────────────────────────────────────
+// Booking section
+// ──────────────────────────────────────────────────────────────────────
+function BookingSection({ variant = "safe" }) {
+  const [type, setType] = useState("new");
+  const [service, setService] = useState("Cleaning & checkup");
+  const [date, setDate] = useState("");
+  const services = ["Cleaning & checkup", "New patient exam", "Cosmetic consult", "Invisalign consult", "Implant consult", "Emergency"];
+
+  const dark = variant === "bold";
+  return (
+    <section style={{
+      background: dark ? "var(--ink)" : "var(--brand-mist)",
+      color: dark ? "var(--brand-white)" : "var(--ink)",
+      padding: "100px 32px",
+      position: "relative",
+      overflow: "hidden",
+    }}>
+      {!dark && <SoftBlob style={{ right: -120, top: -120, width: 500, height: 500, opacity: 0.5 }} />}
+      <div style={{ maxWidth: 1200, margin: "0 auto", position: "relative" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1.1fr", gap: 80, alignItems: "center" }}>
+          <div>
+            <div className="eyebrow" style={{ color: dark ? "var(--brand-sky)" : "var(--brand-royal)" }}>Book a visit</div>
+            <h2 className="serif" style={{
+              fontSize: 56, lineHeight: 1.05, margin: "20px 0 24px",
+              letterSpacing: "-0.02em",
+            }}>
+              Pick a time<br/>that feels right.
+            </h2>
+            <p style={{ fontSize: 17, lineHeight: 1.6, opacity: 0.85, maxWidth: 460 }}>
+              Self-book online, call either office, or text — whichever
+              feels easier. We'll confirm your visit within one business day.
+            </p>
+            <div style={{ display: "flex", gap: 28, marginTop: 36 }}>
+              <Stat n="1 business day" label="Time to confirm your visit" dark={dark} />
+              <Stat n="1 hour" label="Reserved per visit" dark={dark} />
+              <Stat n="24/7" label="Online self-booking" dark={dark} />
+            </div>
+          </div>
+
+          <div style={{
+            background: dark ? "rgba(255,255,255,0.04)" : "var(--brand-white)",
+            border: `1px solid ${dark ? "rgba(255,255,255,0.1)" : "var(--line)"}`,
+            borderRadius: 22,
+            padding: 36,
+            boxShadow: dark ? "none" : "0 30px 80px -30px rgba(13,71,161,0.25)",
+          }}>
+            <div style={{ display: "flex", gap: 8, marginBottom: 24 }}>
+              {[["new","New patient"],["returning","Returning"],["emergency","Emergency"]].map(([id, label]) => (
+                <button
+                  key={id}
+                  onClick={() => setType(id)}
+                  style={{
+                    flex: 1, padding: "10px 12px", borderRadius: 999,
+                    background: type === id ? (dark ? "var(--brand-sky)" : "var(--brand-royal)") : "transparent",
+                    color: type === id ? "white" : (dark ? "white" : "var(--ink)"),
+                    border: type === id ? "none" : `1px solid ${dark ? "rgba(255,255,255,0.18)" : "var(--line)"}`,
+                    fontSize: 12, fontWeight: 500,
+                    transition: "background .2s, color .2s",
+                  }}
+                >{label}</button>
+              ))}
+            </div>
+
+            <FormField label="Service" dark={dark}>
+              <select
+                value={service}
+                onChange={(e) => setService(e.target.value)}
+                style={fieldStyle(dark)}
+              >
+                {services.map(s => <option key={s}>{s}</option>)}
+              </select>
+            </FormField>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 14 }}>
+              <FormField label="Preferred date" dark={dark}>
+                <input
+                  type="date"
+                  value={date}
+                  onChange={(e) => setDate(e.target.value)}
+                  style={fieldStyle(dark)}
+                />
+              </FormField>
+              <FormField label="Location" dark={dark}>
+                <select style={fieldStyle(dark)}>
+                  <option>Rye — 66 Milton Rd</option>
+                  <option>Rye Brook — 555 Westchester Ave</option>
+                </select>
+              </FormField>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 14 }}>
+              <FormField label="Your name" dark={dark}>
+                <input placeholder="Jordan Liu" style={fieldStyle(dark)} />
+              </FormField>
+              <FormField label="Phone or email" dark={dark}>
+                <input placeholder="(914) 555-0142" style={fieldStyle(dark)} />
+              </FormField>
+            </div>
+
+            <button className="btn btn-primary" style={{
+              width: "100%", marginTop: 12, padding: 16, fontSize: 15,
+              background: dark ? "var(--brand-sky)" : "var(--brand-royal)",
+            }}>
+              <Icon name="calendar" size={16} /> Request appointment
+            </button>
+            <p style={{ fontSize: 11, color: dark ? "rgba(255,255,255,0.5)" : "var(--ink-mute)", textAlign: "center", marginTop: 14, lineHeight: 1.5 }}>
+              We'll confirm by phone or text within one business day.<br/>
+              For dental emergencies, please call us directly.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function FormField({ label, dark, children }) {
+  return (
+    <label style={{ display: "block", marginBottom: 14 }}>
+      <div style={{
+        fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase",
+        marginBottom: 6,
+        color: dark ? "rgba(255,255,255,0.55)" : "var(--ink-mute)",
+        fontWeight: 500,
+      }}>{label}</div>
+      {children}
+    </label>
+  );
+}
+
+function fieldStyle(dark) {
+  return {
+    width: "100%",
+    background: dark ? "rgba(255,255,255,0.06)" : "var(--offwhite)",
+    border: `1px solid ${dark ? "rgba(255,255,255,0.12)" : "var(--line)"}`,
+    borderRadius: 10,
+    padding: "12px 14px",
+    fontSize: 14,
+    color: dark ? "white" : "var(--ink)",
+    outline: "none",
+  };
+}
+
+function Stat({ n, label, dark }) {
+  return (
+    <div>
+      <div className="serif" style={{ fontSize: 28, lineHeight: 1, marginBottom: 6 }}>{n}</div>
+      <div style={{ fontSize: 11, color: dark ? "rgba(255,255,255,0.55)" : "var(--ink-mute)", letterSpacing: "0.06em", textTransform: "uppercase" }}>{label}</div>
+    </div>
+  );
+}
+
+function SoftBlob({ style }) {
+  return (
+    <div style={{
+      position: "absolute",
+      borderRadius: 999,
+      background: "radial-gradient(circle, var(--brand-sky), transparent 70%)",
+      filter: "blur(40px)",
+      pointerEvents: "none",
+      ...style,
+    }} />
+  );
+}
+
+// ──────────────────────────────────────────────────────────────────────
+// Section container with eyebrow + heading
+// ──────────────────────────────────────────────────────────────────────
+function SectionHead({ eyebrow, title, intro, align = "left", maxWidth = 560 }) {
+  return (
+    <div className="reveal" style={{
+      maxWidth,
+      margin: align === "center" ? "0 auto" : 0,
+      marginBottom: 56,
+      textAlign: align,
+    }}>
+      <div className="eyebrow" style={{ color: "var(--brand-royal)" }}>{eyebrow}</div>
+      <h2 className="serif" style={{
+        fontSize: 48, lineHeight: 1.08, letterSpacing: "-0.02em",
+        margin: "16px 0 18px",
+        textWrap: "balance",
+      }}>{title}</h2>
+      {intro && (
+        <p style={{ fontSize: 17, lineHeight: 1.6, color: "var(--ink-soft)", textWrap: "pretty" }}>
+          {intro}
+        </p>
+      )}
+    </div>
+  );
+}
+
+// ──────────────────────────────────────────────────────────────────────
+// Reusable inner-page hero — compact, no video, consistent across subpages
+// ──────────────────────────────────────────────────────────────────────
+function PageHero({ eyebrow, title, intro, img, imgAlt }) {
+  return (
+    <section style={{ padding: "56px 32px 0", maxWidth: 1280, margin: "0 auto" }}>
+      <div style={{ display: "grid", gridTemplateColumns: img ? "1.1fr 1fr" : "1fr", gap: 60, alignItems: "center", paddingBottom: 70 }}>
+        <div style={{ maxWidth: 620 }}>
+          <div className="eyebrow" style={{ color: "var(--brand-royal)" }}>{eyebrow}</div>
+          <h1 className="serif" style={{ fontSize: 56, lineHeight: 1.05, letterSpacing: "-0.025em", margin: "16px 0 20px", textWrap: "balance" }}>{title}</h1>
+          {intro && <p style={{ fontSize: 18, lineHeight: 1.6, color: "var(--ink-soft)", textWrap: "pretty", margin: 0 }}>{intro}</p>}
+        </div>
+        {img && <Ph h={360} src={img} alt={imgAlt || title} style={{ borderRadius: 20 }} />}
+      </div>
+    </section>
+  );
+}
+
+// ──────────────────────────────────────────────────────────────────────
+// ServiceDetailPage — shared template for each lead-service subpage
+// ──────────────────────────────────────────────────────────────────────
+function ServiceDetailPage({ eyebrow, title, intro, heroImg, benefits, steps, faqs, related, ctaNote }) {
+  return (
+    <div className="container-q" style={{ width: "100%", background: "var(--brand-white)", color: "var(--ink)", fontFamily: "var(--sans)", position: "relative", isolation: "isolate" }}>
+      <Header variant="safe" scrolled={true} active="services" />
+      <PageHero eyebrow={eyebrow} title={title} intro={intro} img={heroImg} imgAlt={title} />
+
+      <section style={{ padding: "20px 32px 100px", maxWidth: 1280, margin: "0 auto" }}>
+        <SectionHead eyebrow="Why patients choose this" title="What makes it worth it." maxWidth={600} />
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 20 }}>
+          {benefits.map(b => (
+            <div key={b.title} style={{ background: "var(--cream)", borderRadius: 18, padding: 28 }}>
+              <div style={{ width: 40, height: 40, borderRadius: 11, background: "var(--brand-mist)", color: "var(--brand-royal)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 18 }}>
+                <Icon name={b.icon || "sparkle"} size={18} />
+              </div>
+              <h3 className="serif" style={{ fontSize: 20, margin: "0 0 10px" }}>{b.title}</h3>
+              <p style={{ fontSize: 14.5, lineHeight: 1.6, color: "var(--ink-soft)", margin: 0 }}>{b.detail}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section style={{ padding: "100px 32px", background: "var(--brand-mist)" }}>
+        <div style={{ maxWidth: 1000, margin: "0 auto" }}>
+          <SectionHead eyebrow="What to expect" title="How it works, step by step." maxWidth={560} />
+          {steps.map((s, i) => (
+            <div key={s.title} style={{ display: "flex", gap: 24, paddingTop: i === 0 ? 0 : 30, paddingBottom: 30, borderTop: i === 0 ? "none" : "1px solid var(--line)" }}>
+              <div style={{ width: 46, flexShrink: 0, fontFamily: "var(--mono)", fontSize: 13, color: "var(--brand-royal)", paddingTop: 3 }}>{String(i + 1).padStart(2, "0")}</div>
+              <div>
+                <h3 className="serif" style={{ fontSize: 22, margin: "0 0 8px" }}>{s.title}</h3>
+                <p style={{ fontSize: 15.5, lineHeight: 1.6, color: "var(--ink-soft)", margin: 0 }}>{s.detail}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section style={{ padding: "100px 32px", maxWidth: 900, margin: "0 auto" }}>
+        <SectionHead eyebrow="Questions" title="Frequently asked." maxWidth={560} />
+        <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+          {faqs.map((f, i) => (
+            <div key={f.q} style={{ padding: "22px 0", borderTop: i === 0 ? "1px solid var(--line)" : "1px solid var(--line)" }}>
+              <h3 style={{ fontSize: 16.5, fontWeight: 600, margin: "0 0 8px" }}>{f.q}</h3>
+              <p style={{ fontSize: 15, lineHeight: 1.6, color: "var(--ink-soft)", margin: 0 }}>{f.a}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section style={{ padding: "0 32px 110px", maxWidth: 1280, margin: "0 auto" }}>
+        <div style={{ background: "var(--brand-royal)", color: "#fff", borderRadius: 24, padding: "56px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 40, flexWrap: "wrap" }}>
+          <div style={{ maxWidth: 480 }}>
+            <h2 className="serif" style={{ fontSize: 34, margin: "0 0 12px", lineHeight: 1.15 }}>Ready to talk about {title.toLowerCase()}?</h2>
+            <p style={{ fontSize: 15.5, opacity: 0.9, margin: 0, lineHeight: 1.6 }}>{ctaNote}</p>
+          </div>
+          <a href="contact.html" className="btn btn-primary" style={{ background: "#fff", color: "var(--brand-royal)", padding: "15px 26px", fontSize: 15, flexShrink: 0 }}>
+            <Icon name="calendar" size={15} /> Book a consult
+          </a>
+        </div>
+      </section>
+
+      {related && related.length > 0 && (
+        <section style={{ padding: "0 32px 110px", maxWidth: 1280, margin: "0 auto" }}>
+          <div className="eyebrow" style={{ color: "var(--brand-royal)", marginBottom: 20 }}>Also explore</div>
+          <div style={{ display: "grid", gridTemplateColumns: `repeat(${related.length}, 1fr)`, gap: 20 }}>
+            {related.map(r => (
+              <a key={r.title} href={r.href} style={{ display: "block", padding: 24, border: "1px solid var(--line)", borderRadius: 16 }}>
+                <h3 className="serif" style={{ fontSize: 19, margin: "0 0 8px" }}>{r.title}</h3>
+                <span style={{ fontSize: 13, color: "var(--brand-royal)", display: "inline-flex", alignItems: "center", gap: 6 }}>Learn more <Icon name="arrow-right" size={12} /></span>
+              </a>
+            ))}
+          </div>
+        </section>
+      )}
+
+      <BookingSection variant="safe" />
+      <Footer variant="safe" />
+      <Concierge accentColor="var(--brand-royal)" />
+    </div>
+  );
+}
+
+// ──────────────────────────────────────────────────────────────────────
+// LegalPage — simple long-form template for privacy / terms / accessibility
+// ──────────────────────────────────────────────────────────────────────
+function LegalPage({ title, updated, sections }) {
+  return (
+    <div className="container-q" style={{ width: "100%", background: "var(--brand-white)", color: "var(--ink)", fontFamily: "var(--sans)" }}>
+      <Header variant="safe" scrolled={true} />
+      <section style={{ padding: "70px 32px 100px", maxWidth: 780, margin: "0 auto" }}>
+        <div className="eyebrow" style={{ color: "var(--brand-royal)" }}>Legal</div>
+        <h1 className="serif" style={{ fontSize: 44, margin: "16px 0 8px" }}>{title}</h1>
+        <p style={{ fontSize: 13, color: "var(--ink-mute)", marginBottom: 48 }}>Last updated: {updated}</p>
+        {sections.map(s => (
+          <div key={s.heading} style={{ marginBottom: 32 }}>
+            <h2 className="serif" style={{ fontSize: 22, margin: "0 0 10px" }}>{s.heading}</h2>
+            <p style={{ fontSize: 15.5, lineHeight: 1.7, color: "var(--ink-soft)", margin: 0, textWrap: "pretty" }}>{s.body}</p>
+          </div>
+        ))}
+      </section>
+      <Footer variant="safe" />
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────
+// Scroll-reveal — fades/slides .reveal elements into place once
+// ─────────────────────────────────────────────────────────────────
+(function initReveal() {
+  const run = () => {
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("in-view");
+          io.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.12, rootMargin: "0px 0px -40px 0px" });
+    document.querySelectorAll(".reveal:not(.in-view)").forEach((el) => io.observe(el));
+  };
+  if (document.readyState === "complete") run();
+  else window.addEventListener("load", run);
+  // Re-scan shortly after in case React mounted late elements
+  setTimeout(run, 400);
+})();
+
+// Expose all components
+Object.assign(window, {
+  Ph, VideoBG, Logo, LogoMark, Header, PageLoader, Icon, BeforeAfter, Tag,
+  Footer, Concierge, ServiceCard, SERVICE_BUCKETS,
+  Testimonial, TESTIMONIALS, FIRST_VISIT, BookingSection,
+  SectionHead, Stat, SoftBlob, FormField, fieldStyle,
+  PageHero, ServiceDetailPage, LegalPage, NAV_ITEMS, OFFICES,
+});
+
+
+function PatientsPage() {
+  return (
+    <div className="container-q" style={{ width: "100%", background: "var(--brand-white)", color: "var(--ink)", fontFamily: "var(--sans)" }}>
+      <Header variant="safe" scrolled={true} active="patients" />
+      <PageHero
+        eyebrow="For patients"
+        title="Everything you need before your first visit."
+        intro="Forms, insurance basics, and answers to the questions we hear most — so nothing about your visit is a surprise."
+        img="images/photos/WCD_MANNING_-032.jpg"
+        imgAlt="Gloving up before a gentle exam"
+      />
+
+      <section style={{ padding: "20px 32px 100px", maxWidth: 1280, margin: "0 auto" }}>
+        <SectionHead eyebrow="New patients" title="Save time with these before you arrive." maxWidth={600} />
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 20 }}>
+          <DownloadCard title="New patient forms" detail="Medical history, consent, and contact info — fill out ahead of time or complete on an iPad in office." />
+          <DownloadCard title="Insurance & billing overview" detail="How out-of-network billing works, what a PPO covers, and our in-house discount plan for the uninsured." />
+          <DownloadCard title="Financial policy" detail="Payment options, financing plans, and what to expect at checkout." />
+        </div>
+      </section>
+
+      <section style={{ padding: "100px 32px", background: "var(--ink)", color: "#fff" }}>
+        <div style={{ maxWidth: 1280, margin: "0 auto", display: "grid", gridTemplateColumns: "1fr 1.2fr", gap: 80, alignItems: "start" }}>
+          <div style={{ position: "sticky", top: 120 }}>
+            <div style={{ maxWidth: 420 }}>
+              <div className="eyebrow" style={{ color: "var(--brand-sky)" }}>Your first visit</div>
+              <h2 className="serif" style={{ fontSize: 42, lineHeight: 1.08, margin: "16px 0 18px", textWrap: "balance" }}>No surprises. Ever.</h2>
+              <p style={{ fontSize: 16.5, lineHeight: 1.6, color: "rgba(255,255,255,0.78)", margin: 0 }}>
+                Here's exactly what happens between walking in the door and walking out.
+              </p>
+            </div>
+          </div>
+          <div>
+            {FIRST_VISIT.map((s, i) => (
+              <div key={s.step} style={{ display: "flex", gap: 24, paddingBottom: 32, paddingTop: i === 0 ? 0 : 32, borderTop: i === 0 ? "none" : "1px solid rgba(255,255,255,0.15)" }}>
+                <div style={{ width: 50, flexShrink: 0, fontFamily: "var(--mono)", fontSize: 13, color: "var(--brand-sky)", paddingTop: 4 }}>{s.step}</div>
+                <div>
+                  <h3 className="serif" style={{ fontSize: 22, margin: "0 0 8px" }}>{s.title}</h3>
+                  <p style={{ fontSize: 15, lineHeight: 1.6, color: "rgba(255,255,255,0.78)", margin: 0 }}>{s.detail}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section style={{ padding: "100px 32px", maxWidth: 1000, margin: "0 auto" }}>
+        <SectionHead eyebrow="Insurance & financial" title="How payment actually works here." maxWidth={620} />
+        <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+          {PATIENT_FAQS.map((f, i) => (
+            <div key={f.q} style={{ padding: "22px 0", borderTop: "1px solid var(--line)" }}>
+              <h3 style={{ fontSize: 16.5, fontWeight: 600, margin: "0 0 8px" }}>{f.q}</h3>
+              <p style={{ fontSize: 15, lineHeight: 1.6, color: "var(--ink-soft)", margin: 0 }}>{f.a}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section style={{ padding: "90px 32px", background: "var(--brand-warm)" }}>
+        <div style={{ maxWidth: 1100, margin: "0 auto", textAlign: "center" }}>
+          <div className="eyebrow" style={{ color: "var(--brand-royal)" }}>Who we welcome</div>
+          <h2 className="serif" style={{ fontSize: 40, lineHeight: 1.1, margin: "16px auto 14px", maxWidth: 700, textWrap: "balance" }}>
+            Come on in, neighbor. Everyone's welcome here.
+          </h2>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 12, justifyContent: "center", marginTop: 28 }}>
+            {["LGBTQ+ friendly", "Transgender safe space", "Wheelchair accessible", "Gender-neutral restroom",
+              "Parents' waiting area", "Se habla español", "Fala-se português", "In-house discount plan for the uninsured"].map(t => (
+              <span key={t} style={{ background: "var(--brand-white)", border: "1px solid var(--line)", borderRadius: 999, padding: "10px 18px", fontSize: 14, color: "var(--ink-soft)" }}>{t}</span>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <BookingSection variant="safe" />
+      <Footer variant="safe" />
+      <Concierge accentColor="var(--brand-royal)" />
+    </div>
+  );
+}
+
+function DownloadCard({ title, detail }) {
+  return (
+    <div style={{ background: "var(--cream)", borderRadius: 18, padding: 28, display: "flex", flexDirection: "column", gap: 14 }}>
+      <div style={{ width: 40, height: 40, borderRadius: 11, background: "var(--brand-mist)", color: "var(--brand-royal)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <Icon name="mail" size={17} />
+      </div>
+      <h3 className="serif" style={{ fontSize: 19, margin: 0 }}>{title}</h3>
+      <p style={{ fontSize: 14, lineHeight: 1.55, color: "var(--ink-soft)", margin: 0, flex: 1 }}>{detail}</p>
+      <span style={{ fontSize: 12.5, color: "var(--ink-mute)", fontFamily: "var(--mono)" }}>PDF · available at check-in</span>
+    </div>
+  );
+}
+
+const PATIENT_FAQS = [
+  { q: "Do you accept my insurance?", a: "We're out-of-network with most PPOs but accept and file claims on your behalf — most patients still see meaningful reimbursement. Bring your card and we'll check your specific benefits before treatment." },
+  { q: "What if I don't have insurance?", a: "We offer an in-house discount plan for uninsured patients that covers a set of preventive visits and a discount on treatment — ask our front desk for current pricing." },
+  { q: "Do you offer financing?", a: "Yes, for larger treatment plans (implants, veneers, Invisalign) we offer third-party financing with monthly payment options." },
+  { q: "What should I bring to my first visit?", a: "A photo ID, your insurance card if you have one, a list of current medications, and your completed new patient forms if you filled them out ahead of time." },
+];
+
+window.PatientsPage = PatientsPage;
+
+
+    ReactDOM.createRoot(document.getElementById("root")).render(<PatientsPage />);
+  </script>
+</body>
+</html>
